@@ -3,6 +3,8 @@ package com.example.projectedu.ui.screens.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projectedu.data.model.User
+import com.example.projectedu.domain.validator.NameValidator
+import com.example.projectedu.util.Constants
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,8 +21,8 @@ class ProfileViewModel : ViewModel() {
     }
 
     private fun loadUserData() {
-        // Datos del usuario actual (después vendrá de Firebase)
-        val currentUser = User(
+        // Datos mock (después conectarás con base de datos real)
+        val mockUser = User(
             id = "1",
             name = "Alex Roldan",
             email = "alex@upp.edu.mx",
@@ -34,22 +36,12 @@ class ProfileViewModel : ViewModel() {
             badges = listOf("first_task", "perfect_week", "early_bird")
         )
 
-        _state.value = _state.value.copy(
-            user = currentUser,
-            editName = currentUser.name,
-            editUniversity = currentUser.university,
-            editCareer = currentUser.career,
-            editAge = currentUser.age.toString()
-        )
+        _state.value = _state.value.copy(user = mockUser)
     }
 
     fun onEditClick() {
-        _state.value = _state.value.copy(isEditing = true)
-    }
-
-    fun onCancelEdit() {
         _state.value = _state.value.copy(
-            isEditing = false,
+            isEditing = true,
             editName = _state.value.user.name,
             editUniversity = _state.value.user.university,
             editCareer = _state.value.user.career,
@@ -58,7 +50,15 @@ class ProfileViewModel : ViewModel() {
     }
 
     fun onNameChange(name: String) {
-        _state.value = _state.value.copy(editName = name)
+        // Filtrar caracteres no permitidos en tiempo real
+        val filteredName = name.filter { char ->
+            char.isLetter() || char.isWhitespace()
+        }.take(30) // Limitar a 30 caracteres
+
+        _state.value = _state.value.copy(
+            editName = filteredName,
+            nameError = null
+        )
     }
 
     fun onUniversityChange(university: String) {
@@ -70,29 +70,67 @@ class ProfileViewModel : ViewModel() {
     }
 
     fun onAgeChange(age: String) {
-        if (age.isEmpty() || age.all { it.isDigit() }) {
-            _state.value = _state.value.copy(editAge = age)
-        }
+        // Solo permitir números
+        val filteredAge = age.filter { it.isDigit() }.take(2)
+        _state.value = _state.value.copy(editAge = filteredAge)
     }
 
     fun onSaveClick() {
-        if (_state.value.editName.isBlank()) {
+        // Limpiar errores
+        _state.value = _state.value.copy(
+            nameError = null,
+            errorMessage = null
+        )
+
+        var hasError = false
+
+        // Validar nombre con el nuevo validador
+        val nameValidation = NameValidator.validate(_state.value.editName)
+        if (!nameValidation.isValid) {
             _state.value = _state.value.copy(
-                errorMessage = "El nombre no puede estar vacío"
+                nameError = nameValidation.errorMessage
             )
-            return
+            hasError = true
         }
 
+        // Validar universidad
+        if (_state.value.editUniversity.isBlank()) {
+            _state.value = _state.value.copy(
+                errorMessage = "La universidad no puede estar vacía"
+            )
+            hasError = true
+        }
+
+        // Validar carrera
+        if (_state.value.editCareer.isBlank()) {
+            _state.value = _state.value.copy(
+                errorMessage = "La carrera no puede estar vacía"
+            )
+            hasError = true
+        }
+
+        // Validar edad
+        val age = _state.value.editAge.toIntOrNull()
+        if (age == null || age < 16 || age > 99) {
+            _state.value = _state.value.copy(
+                errorMessage = "La edad debe estar entre 16 y 99 años"
+            )
+            hasError = true
+        }
+
+        if (hasError) return
+
+        // Guardar cambios
         _state.value = _state.value.copy(isSaving = true)
 
         viewModelScope.launch {
-            delay(1500)
+            delay(2000)
 
             val updatedUser = _state.value.user.copy(
                 name = _state.value.editName,
                 university = _state.value.editUniversity,
                 career = _state.value.editCareer,
-                age = _state.value.editAge.toIntOrNull() ?: 21
+                age = age!!
             )
 
             _state.value = _state.value.copy(
@@ -102,18 +140,22 @@ class ProfileViewModel : ViewModel() {
                 saveSuccess = true
             )
 
-            delay(2000)
+            delay(3000)
             _state.value = _state.value.copy(saveSuccess = false)
         }
     }
 
-    fun clearError() {
-        _state.value = _state.value.copy(errorMessage = null)
+    fun onCancelEdit() {
+        _state.value = _state.value.copy(
+            isEditing = false,
+            nameError = null,
+            errorMessage = null
+        )
     }
 
     fun calculateXPForNextLevel(): Int {
         val currentLevel = _state.value.user.currentLevel
-        return 100 + (currentLevel * 50)
+        return Constants.XP_BASE_PER_LEVEL + (currentLevel * Constants.XP_LEVEL_INCREMENT)
     }
 
     fun getXPProgress(): Float {

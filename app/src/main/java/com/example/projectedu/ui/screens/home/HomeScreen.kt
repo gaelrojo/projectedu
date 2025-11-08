@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,96 +20,79 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.projectedu.ui.components.navigation.BottomNavigationBar
+import com.example.projectedu.ui.components.navigation.DrawerContent
 import com.example.projectedu.ui.navigation.Screen
 import com.example.projectedu.ui.theme.*
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
     viewModel: HomeViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    Scaffold(
-        bottomBar = {
-            BottomNavigationBar(navController = navController)
-        },
-        containerColor = BackgroundDark
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(BackgroundDark)
-        ) {
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            DrawerContent(
+                navController = navController,
+                currentRoute = navController.currentBackStackEntry?.destination?.route,
+                userName = state.user.name,
+                userEmail = state.user.email,
+                userLevel = state.user.currentLevel,
+                onCloseDrawer = {
+                    scope.launch { drawerState.close() }
+                }
+            )
+        }
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("EduSync") },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            scope.launch { drawerState.open() }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "Menu",
+                                tint = TextPrimary
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            navController.navigate(Screen.Notifications.route)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notificaciones",
+                                tint = TextPrimary
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = BackgroundDark,
+                        titleContentColor = TextPrimary
+                    )
+                )
+            },
+            containerColor = BackgroundDark
+        ) { paddingValues ->
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Header con saludo y notificaciones
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "Hola",
-                                fontSize = 16.sp,
-                                color = TextSecondary
-                            )
-                            Text(
-                                text = state.user.name.split(" ").firstOrNull() ?: "Usuario",
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = TextPrimary
-                            )
-                        }
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            IconButton(onClick = {
-                                navController.navigate(Screen.Notifications.route)
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Default.Notifications,
-                                    contentDescription = "Notificaciones",
-                                    tint = TextPrimary
-                                )
-                            }
-
-                            // Avatar (clickeable para ir a perfil)
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(PrimaryPurple)
-                                    .clickable {
-                                        navController.navigate(Screen.Profile.route)
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = state.user.name.split(" ")
-                                        .mapNotNull { it.firstOrNull()?.toString() }
-                                        .take(2)
-                                        .joinToString(""),
-                                    color = TextPrimary,
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                }
-
                 // Card de nivel y XP
                 item {
                     Card(
@@ -128,7 +112,7 @@ fun HomeScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Este es tu Studyboard",
+                                    text = "Tu Progreso",
                                     fontSize = 16.sp,
                                     color = TextSecondary
                                 )
@@ -139,30 +123,13 @@ fun HomeScreen(
                                     color = LevelBadge
                                 ) {
                                     Text(
-                                        text = "General",
+                                        text = "Nivel ${state.user.currentLevel}",
                                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = BackgroundDark
                                     )
                                 }
-                            }
-
-                            // Nivel
-                            Row(
-                                verticalAlignment = Alignment.Bottom
-                            ) {
-                                Text(
-                                    text = "Nivel ",
-                                    fontSize = 20.sp,
-                                    color = TextSecondary
-                                )
-                                Text(
-                                    text = state.user.currentLevel.toString(),
-                                    fontSize = 32.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = LevelBadge
-                                )
                             }
 
                             // Barra de progreso XP

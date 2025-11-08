@@ -1,10 +1,17 @@
 package com.example.projectedu.ui.screens.tasks
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -19,7 +26,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projectedu.data.model.Task
 import com.example.projectedu.ui.components.common.*
-import com.example.projectedu.ui.components.navigation.BottomNavigationBar
 import com.example.projectedu.ui.theme.*
 import androidx.navigation.NavController
 import java.text.SimpleDateFormat
@@ -52,171 +58,262 @@ fun TasksScreen(
                 }
             )
         },
-        bottomBar = {
-            BottomNavigationBar(navController = navController)
-        },
         containerColor = BackgroundDark
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Filtros
-            ScrollableTabRow(
-                selectedTabIndex = state.selectedFilter.ordinal,
-                containerColor = BackgroundDark,
-                contentColor = TextPrimary,
-                edgePadding = 16.dp
-            ) {
-                TaskFilter.values().forEach { filter ->
-                    Tab(
-                        selected = state.selectedFilter == filter,
-                        onClick = { viewModel.onFilterChange(filter) },
-                        text = {
-                            Text(
-                                text = when (filter) {
-                                    TaskFilter.ALL -> "Todas"
-                                    TaskFilter.PENDING -> "Pendientes"
-                                    TaskFilter.COMPLETED -> "Completadas"
-                                    TaskFilter.HIGH_PRIORITY -> "Urgentes"
-                                },
-                                fontWeight = if (state.selectedFilter == filter) FontWeight.Bold else FontWeight.Normal
-                            )
-                        }
-                    )
-                }
-            }
-
-            Divider(color = SurfaceBorder)
-
-            // Lista de tareas
-            if (state.filteredTasks.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = "📝",
-                            fontSize = 64.sp
-                        )
-                        Text(
-                            text = "No hay tareas",
-                            fontSize = 18.sp,
-                            color = TextSecondary
-                        )
-                        PrimaryButton(
-                            text = "Crear tarea",
-                            onClick = { viewModel.onShowCreateDialog() },
-                            modifier = Modifier.width(200.dp)
-                        )
-                    }
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(state.filteredTasks) { task ->
-                        TaskItemCard(
-                            task = task,
-                            onToggleComplete = { viewModel.onToggleTaskCompletion(task) },
-                            onEdit = { viewModel.onShowEditDialog(task) },
-                            onDelete = { viewModel.onShowDeleteDialog(task) }
-                        )
-                    }
-                }
-            }
-        }
-
-        // Dialogs
-        if (state.showCreateDialog) {
-            TaskDialog(
-                title = "Crear Tarea",
-                taskTitle = state.editTitle,
-                description = state.editDescription,
-                subject = state.editSubject,
-                priority = state.editPriority,
-                type = state.editType,
-                onTitleChange = { viewModel.onTitleChange(it) },
-                onDescriptionChange = { viewModel.onDescriptionChange(it) },
-                onSubjectChange = { viewModel.onSubjectChange(it) },
-                onPriorityChange = { viewModel.onPriorityChange(it) },
-                onTypeChange = { viewModel.onTypeChange(it) },
-                onDismiss = { viewModel.onDismissDialogs() },
-                onConfirm = { viewModel.onCreateTask() },
-                isLoading = state.isLoading
-            )
-        }
-
-        if (state.showEditDialog) {
-            TaskDialog(
-                title = "Editar Tarea",
-                taskTitle = state.editTitle,
-                description = state.editDescription,
-                subject = state.editSubject,
-                priority = state.editPriority,
-                type = state.editType,
-                onTitleChange = { viewModel.onTitleChange(it) },
-                onDescriptionChange = { viewModel.onDescriptionChange(it) },
-                onSubjectChange = { viewModel.onSubjectChange(it) },
-                onPriorityChange = { viewModel.onPriorityChange(it) },
-                onTypeChange = { viewModel.onTypeChange(it) },
-                onDismiss = { viewModel.onDismissDialogs() },
-                onConfirm = { viewModel.onUpdateTask() },
-                isLoading = state.isLoading
-            )
-        }
-
-        if (state.showDeleteDialog) {
-            AlertDialog(
-                onDismissRequest = { viewModel.onDismissDialogs() },
-                title = { Text("Eliminar tarea") },
-                text = { Text("¿Estás seguro de que deseas eliminar esta tarea?") },
-                confirmButton = {
-                    TextButton(
-                        onClick = { viewModel.onDeleteTask() },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = AccentRed
-                        )
-                    ) {
-                        Text("Eliminar")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { viewModel.onDismissDialogs() }) {
-                        Text("Cancelar")
-                    }
-                },
-                containerColor = BackgroundCard,
-                titleContentColor = TextPrimary,
-                textContentColor = TextSecondary
-            )
-        }
-
-        // Snackbar de éxito
-        state.successMessage?.let { message ->
-            Box(
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
-                contentAlignment = Alignment.BottomCenter
+                    .padding(paddingValues)
             ) {
-                Snackbar(
-                    containerColor = AccentGreen
+                // Filtros
+                ScrollableTabRow(
+                    selectedTabIndex = state.selectedFilter.ordinal,
+                    containerColor = BackgroundDark,
+                    contentColor = TextPrimary,
+                    edgePadding = 16.dp
                 ) {
-                    Text(message)
+                    TaskFilter.values().forEach { filter ->
+                        Tab(
+                            selected = state.selectedFilter == filter,
+                            onClick = { viewModel.onFilterChange(filter) },
+                            text = {
+                                Text(
+                                    text = when (filter) {
+                                        TaskFilter.ALL -> "Todas"
+                                        TaskFilter.PENDING -> "Pendientes"
+                                        TaskFilter.COMPLETED -> "Completadas"
+                                        TaskFilter.HIGH_PRIORITY -> "Urgentes"
+                                    },
+                                    fontWeight = if (state.selectedFilter == filter) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        )
+                    }
+                }
+
+                Divider(color = SurfaceBorder)
+
+                // Lista de tareas
+                if (state.filteredTasks.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text(
+                                text = "📝",
+                                fontSize = 64.sp
+                            )
+                            Text(
+                                text = "No hay tareas",
+                                fontSize = 18.sp,
+                                color = TextSecondary
+                            )
+                            PrimaryButton(
+                                text = "Crear tarea",
+                                onClick = { viewModel.onShowCreateDialog() },
+                                modifier = Modifier.width(200.dp)
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(
+                            items = state.filteredTasks,
+                            key = { task -> task.id }
+                        ) { task ->
+                            TaskItemCard(
+                                task = task,
+                                onToggleComplete = { viewModel.onToggleTaskCompletion(task) },
+                                onEdit = { viewModel.onShowEditDialog(task) },
+                                onDelete = { viewModel.onShowDeleteDialog(task) }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Dialogs
+            if (state.showCreateDialog) {
+                TaskDialog(
+                    title = "Crear Tarea",
+                    taskTitle = state.editTitle,
+                    description = state.editDescription,
+                    subject = state.editSubject,
+                    priority = state.editPriority,
+                    type = state.editType,
+                    onTitleChange = { viewModel.onTitleChange(it) },
+                    onDescriptionChange = { viewModel.onDescriptionChange(it) },
+                    onSubjectChange = { viewModel.onSubjectChange(it) },
+                    onPriorityChange = { viewModel.onPriorityChange(it) },
+                    onTypeChange = { viewModel.onTypeChange(it) },
+                    onDismiss = { viewModel.onDismissDialogs() },
+                    onConfirm = { viewModel.onCreateTask() },
+                    isLoading = state.isLoading
+                )
+            }
+
+            if (state.showEditDialog) {
+                TaskDialog(
+                    title = "Editar Tarea",
+                    taskTitle = state.editTitle,
+                    description = state.editDescription,
+                    subject = state.editSubject,
+                    priority = state.editPriority,
+                    type = state.editType,
+                    onTitleChange = { viewModel.onTitleChange(it) },
+                    onDescriptionChange = { viewModel.onDescriptionChange(it) },
+                    onSubjectChange = { viewModel.onSubjectChange(it) },
+                    onPriorityChange = { viewModel.onPriorityChange(it) },
+                    onTypeChange = { viewModel.onTypeChange(it) },
+                    onDismiss = { viewModel.onDismissDialogs() },
+                    onConfirm = { viewModel.onUpdateTask() },
+                    isLoading = state.isLoading
+                )
+            }
+
+            if (state.showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { viewModel.onDismissDialogs() },
+                    title = { Text("Eliminar tarea") },
+                    text = { Text("¿Estás seguro de que deseas eliminar esta tarea?") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = { viewModel.onDeleteTask() },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = AccentRed
+                            )
+                        ) {
+                            Text("Eliminar")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { viewModel.onDismissDialogs() }) {
+                            Text("Cancelar")
+                        }
+                    },
+                    containerColor = BackgroundCard,
+                    titleContentColor = TextPrimary,
+                    textContentColor = TextSecondary
+                )
+            }
+
+            // Snackbar mejorado con animación
+            state.successMessage?.let { message ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 16.dp),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = slideInVertically(
+                            initialOffsetY = { it },
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        ) + fadeIn(),
+                        exit = slideOutVertically(
+                            targetOffsetY = { it }
+                        ) + fadeOut()
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = when {
+                                    message.contains("eliminada") -> AccentRed
+                                    message.contains("completada") -> AccentGreen
+                                    message.contains("creada") -> PrimaryPurple
+                                    message.contains("actualizada") -> AccentBlue
+                                    else -> BackgroundCard
+                                }
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Círculo con ícono
+                                Surface(
+                                    modifier = Modifier.size(48.dp),
+                                    shape = CircleShape,
+                                    color = TextPrimary.copy(alpha = 0.2f)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = when {
+                                                message.contains("eliminada") -> Icons.Default.Delete
+                                                message.contains("completada") -> Icons.Default.CheckCircle
+                                                message.contains("creada") -> Icons.Default.Add
+                                                message.contains("actualizada") -> Icons.Default.Edit
+                                                else -> Icons.Default.CheckCircle
+                                            },
+                                            contentDescription = null,
+                                            tint = TextPrimary,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                    }
+                                }
+
+                                // Texto
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = when {
+                                            message.contains("eliminada") -> "Tarea Eliminada"
+                                            message.contains("completada") -> "¡Bien Hecho!"
+                                            message.contains("creada") -> "Tarea Creada"
+                                            message.contains("actualizada") -> "Tarea Actualizada"
+                                            else -> "Éxito"
+                                        },
+                                        color = TextPrimary,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = message,
+                                        color = TextPrimary.copy(alpha = 0.9f),
+                                        fontSize = 14.sp
+                                    )
+                                }
+
+                                // Emoji grande
+                                Text(
+                                    text = when {
+                                        message.contains("eliminada") -> "🗑️"
+                                        message.contains("completada") -> "🎉"
+                                        message.contains("creada") -> "✨"
+                                        message.contains("actualizada") -> "📝"
+                                        else -> "✓"
+                                    },
+                                    fontSize = 32.sp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskItemCard(
     task: Task,
@@ -232,18 +329,92 @@ fun TaskItemCard(
 
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (task.isCompleted) BackgroundCard.copy(alpha = 0.6f) else BackgroundCard
-        ),
-        shape = RoundedCornerShape(12.dp)
+    // SwipeToDismiss state
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { dismissValue ->
+            when (dismissValue) {
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    onEdit()
+                    false
+                }
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onDelete()
+                    false
+                }
+                SwipeToDismissBoxValue.Settled -> false
+            }
+        },
+        positionalThreshold = { it * 0.5f }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            val direction = dismissState.dismissDirection
+            val color = when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> PrimaryPurple
+                SwipeToDismissBoxValue.EndToStart -> AccentRed
+                SwipeToDismissBoxValue.Settled -> androidx.compose.ui.graphics.Color.Transparent
+            }
+
+            val alignment = when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                SwipeToDismissBoxValue.Settled -> Alignment.Center
+            }
+
+            val icon = when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Edit
+                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
+                SwipeToDismissBoxValue.Settled -> Icons.Default.Done
+            }
+
+            val text = when (direction) {
+                SwipeToDismissBoxValue.StartToEnd -> "Editar"
+                SwipeToDismissBoxValue.EndToStart -> "Eliminar"
+                SwipeToDismissBoxValue.Settled -> ""
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 20.dp),
+                contentAlignment = alignment
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = text,
+                        tint = TextPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = text,
+                        color = TextPrimary,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        },
+        enableDismissFromStartToEnd = !task.isCompleted,
+        enableDismissFromEndToStart = !task.isCompleted
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = if (task.isCompleted) BackgroundCard.copy(alpha = 0.6f) else BackgroundCard
+            ),
+            shape = RoundedCornerShape(12.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -252,7 +423,6 @@ fun TaskItemCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    // Checkbox
                     Checkbox(
                         checked = task.isCompleted,
                         onCheckedChange = { onToggleComplete() },
@@ -262,7 +432,6 @@ fun TaskItemCard(
                         )
                     )
 
-                    // Indicador de prioridad
                     Box(
                         modifier = Modifier
                             .width(4.dp)
@@ -334,7 +503,6 @@ fun TaskItemCard(
                     }
                 }
 
-                // XP Badge
                 if (!task.isCompleted) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
@@ -347,42 +515,6 @@ fun TaskItemCard(
                             fontWeight = FontWeight.Bold,
                             color = PrimaryPurple
                         )
-                    }
-                }
-            }
-
-            // Botones de acción
-            if (!task.isCompleted) {
-                Divider(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    color = SurfaceBorder
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(onClick = onEdit) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Editar",
-                            tint = PrimaryPurple,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Editar", color = PrimaryPurple)
-                    }
-
-                    TextButton(onClick = onDelete) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Eliminar",
-                            tint = AccentRed,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Eliminar", color = AccentRed)
                     }
                 }
             }
@@ -452,7 +584,6 @@ fun TaskDialog(
                     leadingIcon = Icons.Default.Book
                 )
 
-                // Priority selector
                 Column {
                     Text(
                         text = "Prioridad",
@@ -480,7 +611,6 @@ fun TaskDialog(
                     }
                 }
 
-                // Type selector
                 Column {
                     Text(
                         text = "Tipo",

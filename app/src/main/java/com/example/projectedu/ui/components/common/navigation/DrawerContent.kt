@@ -1,10 +1,10 @@
 package com.example.projectedu.ui.components.navigation
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -178,7 +180,7 @@ fun DrawerContent(
 
 @Composable
 fun DrawerMenuItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     title: String,
     isSelected: Boolean,
     onClick: () -> Unit
@@ -186,8 +188,8 @@ fun DrawerMenuItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
-            .background(if (isSelected) PrimaryPurple.copy(alpha = 0.2f) else androidx.compose.ui.graphics.Color.Transparent)
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isSelected) PrimaryPurple.copy(alpha = 0.2f) else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,

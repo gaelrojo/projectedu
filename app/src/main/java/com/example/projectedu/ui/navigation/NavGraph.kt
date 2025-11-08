@@ -1,4 +1,4 @@
-package com.example.projectedu.ui.components.common.navigation
+package com.example.projectedu.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
@@ -90,7 +90,7 @@ fun NavGraph(
             )
         }
 
-        // Home Screen
+        // Home Screen (con Navigation Drawer)
         composable(route = Screen.Home.route) {
             HomeScreen(navController = navController)
         }

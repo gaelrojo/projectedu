@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projectedu.domain.validator.EmailValidator
 import com.example.projectedu.domain.validator.PasswordValidator
+import com.example.projectedu.domain.validator.NameValidator
 import com.example.projectedu.util.Constants
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,8 +18,13 @@ class RegisterViewModel : ViewModel() {
     val state: StateFlow<RegisterState> = _state.asStateFlow()
 
     fun onNameChange(name: String) {
+        // Filtrar caracteres no permitidos en tiempo real
+        val filteredName = name.filter { char ->
+            char.isLetter() || char.isWhitespace()
+        }.take(30) // Limitar a 30 caracteres
+
         _state.value = _state.value.copy(
-            name = name,
+            name = filteredName,
             nameError = null
         )
     }
@@ -56,15 +62,11 @@ class RegisterViewModel : ViewModel() {
 
         var hasError = false
 
-        // Validar nombre
-        if (_state.value.name.isBlank()) {
+        // Validar nombre con el nuevo validador
+        val nameValidation = NameValidator.validate(_state.value.name)
+        if (!nameValidation.isValid) {
             _state.value = _state.value.copy(
-                nameError = Constants.ErrorMessages.EMPTY_FIELD
-            )
-            hasError = true
-        } else if (_state.value.name.length < Constants.MIN_NAME_LENGTH) {
-            _state.value = _state.value.copy(
-                nameError = Constants.ErrorMessages.INVALID_NAME
+                nameError = nameValidation.errorMessage
             )
             hasError = true
         }
@@ -78,7 +80,7 @@ class RegisterViewModel : ViewModel() {
             hasError = true
         }
 
-        // Validar contraseña
+        // Validar contraseña fuerte
         val passwordValidation = PasswordValidator.validateStrong(_state.value.password)
         if (!passwordValidation.isValid) {
             _state.value = _state.value.copy(

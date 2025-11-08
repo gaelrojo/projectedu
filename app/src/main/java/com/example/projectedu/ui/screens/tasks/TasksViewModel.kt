@@ -21,7 +21,6 @@ class TasksViewModel : ViewModel() {
     }
 
     private fun loadTasks() {
-        // Datos mock (después conectarás con base de datos real)
         val mockTasks = listOf(
             Task(
                 id = "1",
@@ -197,10 +196,10 @@ class TasksViewModel : ViewModel() {
                 filteredTasks = updatedTasks,
                 isLoading = false,
                 showCreateDialog = false,
-                successMessage = Constants.SuccessMessages.TASK_CREATED
+                successMessage = "\"${_state.value.editTitle}\" creada exitosamente"
             )
 
-            delay(2000)
+            delay(3000)
             _state.value = _state.value.copy(successMessage = null)
         }
     }
@@ -236,26 +235,27 @@ class TasksViewModel : ViewModel() {
                 filteredTasks = updatedTasks,
                 isLoading = false,
                 showEditDialog = false,
-                successMessage = "Tarea actualizada"
+                successMessage = "Tarea actualizada correctamente"
             )
 
-            delay(2000)
+            delay(3000)
             _state.value = _state.value.copy(successMessage = null)
         }
     }
 
     fun onDeleteTask() {
         viewModelScope.launch {
+            val taskTitle = _state.value.selectedTask?.title ?: "Tarea"
             val updatedTasks = _state.value.tasks.filter { it.id != _state.value.selectedTask?.id }
 
             _state.value = _state.value.copy(
                 tasks = updatedTasks,
                 filteredTasks = updatedTasks,
                 showDeleteDialog = false,
-                successMessage = Constants.SuccessMessages.TASK_DELETED
+                successMessage = "\"$taskTitle\" eliminada exitosamente"
             )
 
-            delay(2000)
+            delay(3000)
             _state.value = _state.value.copy(successMessage = null)
         }
     }
@@ -275,13 +275,13 @@ class TasksViewModel : ViewModel() {
                 tasks = updatedTasks,
                 filteredTasks = updatedTasks,
                 successMessage = if (!task.isCompleted) {
-                    String.format(Constants.SuccessMessages.TASK_COMPLETED, task.xpReward)
+                    "¡Tarea completada! +${task.xpReward} XP ganados"
                 } else {
                     "Tarea marcada como pendiente"
                 }
             )
 
-            delay(2000)
+            delay(3000)
             _state.value = _state.value.copy(successMessage = null)
         }
     }

@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.projectedu.ui.components.common.*
-import com.example.projectedu.ui.components.navigation.BottomNavigationBar
 import com.example.projectedu.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,9 +52,6 @@ fun ProfileScreen(
                     titleContentColor = TextPrimary
                 )
             )
-        },
-        bottomBar = {
-            BottomNavigationBar(navController = navController)
         },
         containerColor = BackgroundDark
     ) { paddingValues ->
@@ -281,7 +277,9 @@ fun ProfileScreen(
                                 value = state.editName,
                                 onValueChange = { viewModel.onNameChange(it) },
                                 label = "Nombre completo",
-                                leadingIcon = Icons.Default.Person
+                                leadingIcon = Icons.Default.Person,
+                                isError = state.nameError != null,
+                                errorMessage = state.nameError
                             )
 
                             CustomTextField(
@@ -306,6 +304,24 @@ fun ProfileScreen(
                                 keyboardType = KeyboardType.Number
                             )
 
+                            // Mostrar error general si existe
+                            state.errorMessage?.let { error ->
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = AccentRed.copy(alpha = 0.1f)
+                                    )
+                                ) {
+                                    Text(
+                                        text = error,
+                                        color = AccentRed,
+                                        fontSize = 14.sp,
+                                        modifier = Modifier.padding(16.dp)
+                                    )
+                                }
+                            }
+
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Row(
@@ -325,8 +341,9 @@ fun ProfileScreen(
                                     isLoading = state.isSaving
                                 )
                             }
+
                         } else {
-// Modo visualización
+                            // Modo visualización
                             InfoRow(
                                 icon = Icons.Default.School,
                                 label = "Universidad",

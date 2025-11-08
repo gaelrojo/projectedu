@@ -4,9 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.projectedu.data.model.Task
-import com.example.projectedu.ui.components.navigation.BottomNavigationBar
 import com.example.projectedu.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -48,9 +44,6 @@ fun CalendarScreen(
                     titleContentColor = TextPrimary
                 )
             )
-        },
-        bottomBar = {
-            BottomNavigationBar(navController = navController)
         },
         containerColor = BackgroundDark
     ) { paddingValues ->
@@ -89,7 +82,9 @@ fun CalendarScreen(
                     }
 
                     Text(
-                        text = dateFormat.format(state.currentMonth).capitalize(),
+                        text = dateFormat.format(state.currentMonth).replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                        },
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
@@ -149,7 +144,9 @@ fun CalendarScreen(
                 val selectedDateFormat = SimpleDateFormat("EEEE, dd 'de' MMMM", Locale("es"))
 
                 Text(
-                    text = selectedDateFormat.format(state.selectedDate),
+                    text = selectedDateFormat.format(state.selectedDate).replaceFirstChar {
+                        if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                    },
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
