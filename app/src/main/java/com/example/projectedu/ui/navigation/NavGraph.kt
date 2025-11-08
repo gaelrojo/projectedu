@@ -1,4 +1,4 @@
-package com.example.projectedu.ui.navigation
+package com.example.projectedu.ui.components.common.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
