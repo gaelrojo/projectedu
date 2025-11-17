@@ -73,3 +73,24 @@ val AchievementGold = Color(0xFFFBBF24)
 val Divider = Color(0xFF374151)
 val Overlay = Color(0x80000000)
 val Shadow = Color(0x40000000)
+
+// Colores principales
+
+val SecondaryPurple = Color(0xFFA89FFF)
+val DarkPurple = Color(0xFF6B5FEF)
+
+// Colores de acento
+
+val AccentGold = Color(0xFFFFD700)
+val SuccessGreen = Color(0xFF4CAF50)
+
+// Colores de fondo
+val DarkBackground = Color(0xFF1A1A2E)
+val SurfaceVariant = Color(0xFF252538)
+val CardBackground = Color(0xFF2E2E42)
+
+
+
+// Colores de estado
+val ErrorRed = Color(0xFFFF5252)
+val WarningOrange = Color(0xFFFF9800)

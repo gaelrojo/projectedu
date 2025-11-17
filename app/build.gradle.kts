@@ -89,4 +89,10 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // Swipe gestures
+    implementation("me.saket.swipe:swipe:1.3.0")
+
+    // Material Icons Extended (si no lo tienes)
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
 }

@@ -13,6 +13,7 @@ import com.example.projectedu.ui.screens.profile.ProfileScreen
 import com.example.projectedu.ui.screens.tasks.TasksScreen
 import com.example.projectedu.ui.screens.notifications.NotificationsScreen
 import com.example.projectedu.ui.screens.calendar.CalendarScreen
+import com.example.projectedu.ui.screens.subjects.SubjectsScreen // ← NUEVO IMPORT
 
 @Composable
 fun NavGraph(
@@ -100,6 +101,16 @@ fun NavGraph(
             TasksScreen(navController = navController)
         }
 
+        // Calendar Screen
+        composable(route = Screen.Calendar.route) {
+            CalendarScreen(navController = navController)
+        }
+
+        // Subjects Screen - ← NUEVO
+        composable(route = Screen.Subjects.route) {
+            SubjectsScreen(navController = navController)
+        }
+
         // Notifications Screen
         composable(route = Screen.Notifications.route) {
             NotificationsScreen(navController = navController)
@@ -108,11 +119,6 @@ fun NavGraph(
         // Profile Screen
         composable(route = Screen.Profile.route) {
             ProfileScreen(navController = navController)
-        }
-
-        // Calendar Screen
-        composable(route = Screen.Calendar.route) {
-            CalendarScreen(navController = navController)
         }
     }
 }

@@ -4,17 +4,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,8 +26,6 @@ import com.example.projectedu.ui.components.navigation.DrawerContent
 import com.example.projectedu.ui.navigation.Screen
 import com.example.projectedu.ui.theme.*
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,12 +42,14 @@ fun HomeScreen(
         drawerContent = {
             DrawerContent(
                 navController = navController,
-                currentRoute = navController.currentBackStackEntry?.destination?.route,
+                currentRoute = Screen.Home.route,
                 userName = state.user.name,
                 userEmail = state.user.email,
                 userLevel = state.user.currentLevel,
                 onCloseDrawer = {
-                    scope.launch { drawerState.close() }
+                    scope.launch {
+                        drawerState.close()
+                    }
                 }
             )
         }
@@ -55,25 +57,16 @@ fun HomeScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("EduSync") },
+                    title = { Text("Inicio") },
                     navigationIcon = {
                         IconButton(onClick = {
-                            scope.launch { drawerState.open() }
+                            scope.launch {
+                                drawerState.open()
+                            }
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Menu,
-                                contentDescription = "Menu",
-                                tint = TextPrimary
-                            )
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = {
-                            navController.navigate(Screen.Notifications.route)
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Notifications,
-                                contentDescription = "Notificaciones",
+                                contentDescription = "Menú",
                                 tint = TextPrimary
                             )
                         }
@@ -86,276 +79,378 @@ fun HomeScreen(
             },
             containerColor = BackgroundDark
         ) { paddingValues ->
-            LazyColumn(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(paddingValues)
             ) {
-                // Card de nivel y XP
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = BackgroundCard
-                        ),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Tu Progreso",
-                                    fontSize = 16.sp,
-                                    color = TextSecondary
-                                )
-
-                                // Badge de nivel
-                                Surface(
-                                    shape = RoundedCornerShape(20.dp),
-                                    color = LevelBadge
-                                ) {
-                                    Text(
-                                        text = "Nivel ${state.user.currentLevel}",
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = BackgroundDark
-                                    )
-                                }
-                            }
-
-                            // Barra de progreso XP
-                            Column(
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = "${state.user.currentXP} XP",
-                                        fontSize = 14.sp,
-                                        color = TextSecondary
-                                    )
-                                    Text(
-                                        text = "${viewModel.calculateXPForNextLevel()} XP",
-                                        fontSize = 14.sp,
-                                        color = TextSecondary
-                                    )
-                                }
-
-                                LinearProgressIndicator(
-                                    progress = { viewModel.getXPProgress() },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(8.dp)
-                                        .clip(RoundedCornerShape(4.dp)),
-                                    color = PrimaryPurple,
-                                    trackColor = XPBarBackground
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Progreso de la semana
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = BackgroundCard
-                        ),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "Progreso en Tareas",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = TextPrimary
-                                    )
-                                    Text(
-                                        text = "Esta Semana",
-                                        fontSize = 14.sp,
-                                        color = TextSecondary
-                                    )
-                                }
-
-                                Text(
-                                    text = "${(state.weekProgress * 100).toInt()}%",
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = PrimaryPurple
-                                )
-                            }
-
-                            LinearProgressIndicator(
-                                progress = { state.weekProgress },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(12.dp)
-                                    .clip(RoundedCornerShape(6.dp)),
-                                color = AccentGreen,
-                                trackColor = XPBarBackground
-                            )
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceAround
-                            ) {
-                                StatItem(
-                                    label = "Tareas completadas",
-                                    value = state.completedTasksThisWeek.toString()
-                                )
-                                StatItem(
-                                    label = "Total de tareas",
-                                    value = state.totalTasksThisWeek.toString()
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Tareas próximas
-                item {
-                    Text(
-                        text = "Tareas Próximas",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                }
-
-                items(state.upcomingTasks) { task ->
-                    TaskCard(task = task)
-                }
-
-                // Materias
-                item {
-                    Text(
-                        text = "Tus Materias",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                }
-
-                items(state.recentSubjects) { subject ->
-                    SubjectCard(subject = subject)
-                }
-
-                // Spacer final
-                item {
-                    Spacer(modifier = Modifier.height(80.dp))
-                }
+                HomeContent(
+                    state = state,
+                    onNavigateToTasks = { navController.navigate(Screen.Tasks.route) },
+                    onNavigateToCalendar = { navController.navigate(Screen.Calendar.route) },
+                    onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
+                )
             }
         }
     }
 }
 
 @Composable
-fun StatItem(label: String, value: String) {
+fun HomeContent(
+    state: HomeState,
+    onNavigateToTasks: () -> Unit,
+    onNavigateToCalendar: () -> Unit,
+    onNavigateToProfile: () -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            WelcomeCard(
+                userName = state.user.name,
+                currentLevel = state.user.currentLevel,
+                currentXP = state.user.currentXP,
+                xpForNextLevel = 500
+            )
+        }
+
+        item {
+            WeeklyProgressCard(
+                completedTasks = 0,
+                totalTasks = 5,
+                progressPercentage = 0f
+            )
+        }
+
+        item {
+            QuickActionsSection(
+                onNavigateToTasks = onNavigateToTasks,
+                onNavigateToCalendar = onNavigateToCalendar,
+                onNavigateToProfile = onNavigateToProfile
+            )
+        }
+
+        item {
+            StreakCard(currentStreak = state.user.currentStreak)
+        }
+
+        item {
+            UpcomingTasksSection()
+        }
+    }
+}
+
+@Composable
+fun WelcomeCard(
+    userName: String,
+    currentLevel: Int,
+    currentXP: Int,
+    xpForNextLevel: Int
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = BackgroundCard
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "¡Hola, $userName! 👋",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = "Continúa con tus tareas",
+                        fontSize = 14.sp,
+                        color = TextSecondary
+                    )
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color = LevelBadge.copy(alpha = 0.2f)
+                ) {
+                    Text(
+                        text = "Nivel $currentLevel",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = LevelBadge
+                    )
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "$currentXP / $xpForNextLevel XP",
+                        fontSize = 14.sp,
+                        color = TextSecondary
+                    )
+                    Text(
+                        text = "${((currentXP.toFloat() / xpForNextLevel) * 100).toInt()}%",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryPurple
+                    )
+                }
+
+                LinearProgressIndicator(
+                    progress = { currentXP.toFloat() / xpForNextLevel },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(12.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                    color = PrimaryPurple,
+                    trackColor = XPBarBackground
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun WeeklyProgressCard(
+    completedTasks: Int,
+    totalTasks: Int,
+    progressPercentage: Float
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = BackgroundCard
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "📅",
+                            fontSize = 20.sp
+                        )
+                        Text(
+                            text = "Progreso Semanal",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                    }
+                    Text(
+                        text = "$completedTasks de $totalTasks tareas completadas",
+                        fontSize = 14.sp,
+                        color = TextSecondary
+                    )
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color = PrimaryPurple.copy(alpha = 0.2f)
+                ) {
+                    Text(
+                        text = "${(progressPercentage * 100).toInt()}%",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryPurple
+                    )
+                }
+            }
+
+            LinearProgressIndicator(
+                progress = { progressPercentage },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(12.dp)
+                    .clip(RoundedCornerShape(6.dp)),
+                color = PrimaryPurple,
+                trackColor = XPBarBackground
+            )
+        }
+    }
+}
+
+@Composable
+fun QuickActionsSection(
+    onNavigateToTasks: () -> Unit,
+    onNavigateToCalendar: () -> Unit,
+    onNavigateToProfile: () -> Unit
+) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = value,
-            fontSize = 24.sp,
+            text = "Accesos Rápidos",
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = TextPrimary
         )
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            color = TextSecondary
-        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            QuickActionCard(
+                icon = Icons.Default.CheckCircle,
+                title = "Tareas",
+                color = PrimaryPurple,
+                modifier = Modifier.weight(1f),
+                onClick = onNavigateToTasks
+            )
+
+            QuickActionCard(
+                icon = Icons.Default.CalendarMonth,
+                title = "Calendario",
+                color = AccentBlue,
+                modifier = Modifier.weight(1f),
+                onClick = onNavigateToCalendar
+            )
+
+            QuickActionCard(
+                icon = Icons.Default.Person,
+                title = "Perfil",
+                color = AccentGreen,
+                modifier = Modifier.weight(1f),
+                onClick = onNavigateToProfile
+            )
+        }
     }
 }
 
 @Composable
-fun TaskCard(task: com.example.projectedu.data.model.Task) {
-    val priorityColor = when (task.priority) {
-        "Alta" -> PriorityHigh
-        "Media" -> PriorityMedium
-        else -> PriorityLow
-    }
-
-    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-
+fun QuickActionCard(
+    icon: ImageVector,
+    title: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier
+            .aspectRatio(1f)
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = BackgroundCard
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = color.copy(alpha = 0.2f),
+                modifier = Modifier.size(56.dp)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = title,
+                        tint = color,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary
+            )
+        }
+    }
+}
+
+@Composable
+fun StreakCard(currentStreak: Int) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = BackgroundCard
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Indicador de prioridad
-                Box(
-                    modifier = Modifier
-                        .width(4.dp)
-                        .height(48.dp)
-                        .background(priorityColor, RoundedCornerShape(2.dp))
+                Text(
+                    text = "🔥",
+                    fontSize = 40.sp
                 )
-
                 Column {
                     Text(
-                        text = task.title,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = task.subjectName,
+                        text = "Racha Actual",
                         fontSize = 14.sp,
                         color = TextSecondary
                     )
                     Text(
-                        text = dateFormat.format(task.dueDate),
-                        fontSize = 12.sp,
-                        color = TextTertiary
+                        text = "$currentStreak días consecutivos",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
                     )
                 }
             }
 
-            // XP Badge
             Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = PrimaryPurple.copy(alpha = 0.2f)
+                shape = CircleShape,
+                color = StreakFire.copy(alpha = 0.2f)
             ) {
                 Text(
-                    text = "+${task.xpReward} XP",
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    fontSize = 12.sp,
+                    text = "$currentStreak",
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryPurple
+                    color = StreakFire
                 )
             }
         }
@@ -363,61 +458,50 @@ fun TaskCard(task: com.example.projectedu.data.model.Task) {
 }
 
 @Composable
-fun SubjectCard(subject: com.example.projectedu.data.model.Subject) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = BackgroundCard
-        ),
-        shape = RoundedCornerShape(12.dp)
+fun UpcomingTasksSection() {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                // Color indicator
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(androidx.compose.ui.graphics.Color(subject.color))
-                )
-
-                Column {
-                    Text(
-                        text = subject.name,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = subject.teacher,
-                        fontSize = 14.sp,
-                        color = TextSecondary
-                    )
-                    Text(
-                        text = "${subject.completedTasks}/${subject.totalTasks} tareas",
-                        fontSize = 12.sp,
-                        color = TextTertiary
-                    )
-                }
-            }
-
-            // Progress percentage
             Text(
-                text = "${subject.progressPercentage.toInt()}%",
-                fontSize = 20.sp,
+                text = "Próximas Tareas",
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = AccentGreen
+                color = TextPrimary
             )
+
+            TextButton(onClick = { /* TODO: Navigate to tasks */ }) {
+                Text(
+                    text = "Ver todas",
+                    color = PrimaryPurple,
+                    fontSize = 14.sp
+                )
+            }
+        }
+
+        // Mock de tareas - después conectaremos con TasksViewModel
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = BackgroundCard
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "No hay tareas pendientes",
+                    fontSize = 14.sp,
+                    color = TextSecondary
+                )
+            }
         }
     }
 }
