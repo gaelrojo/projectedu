@@ -3,13 +3,15 @@ package com.example.projectedu.ui.screens.subjects
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.projectedu.data.model.Subject
 import com.example.projectedu.data.repository.AuthRepository
 import java.util.UUID
+import kotlinx.coroutines.launch
 
 class SubjectsViewModel : ViewModel() {
 
-    private val _state = mutableStateOf(SubjectsState())
+    private val _state = mutableStateOf(value = SubjectsState())
     val state: State<SubjectsState> = _state
 
     private val authRepository = AuthRepository()
@@ -22,7 +24,7 @@ class SubjectsViewModel : ViewModel() {
         val currentUser = authRepository.getCurrentUser()
         if (currentUser != null) {
             _state.value = _state.value.copy(
-                subjects = getDummySubjects(currentUser.id),
+                subjects = getDummySubjects(userId = currentUser.id),
                 isLoading = false
             )
         }
@@ -50,66 +52,56 @@ class SubjectsViewModel : ViewModel() {
     }
 
     fun addSubject(subject: Subject) {
-        val currentUser = authRepository.getCurrentUser()
-        if (currentUser != null) {
-            val newSubject = subject.copy(
-                id = UUID.randomUUID().toString(),
-                userId = currentUser.id
-            )
-
-            val updatedSubjects = _state.value.subjects + newSubject
-            _state.value = _state.value.copy(
-                subjects = updatedSubjects,
-                showAddDialog = false
-            )
-        }
+        val currentSubjects = _state.value.subjects.toMutableList()
+        currentSubjects.add(subject)
+        _state.value = _state.value.copy(subjects = currentSubjects)
+        hideDialog()
     }
 
     fun updateSubject(subject: Subject) {
-        val updatedSubjects = _state.value.subjects.map {
-            if (it.id == subject.id) subject else it
+        val currentSubjects = _state.value.subjects.toMutableList()
+        val index = currentSubjects.indexOfFirst { it.id == subject.id }
+        if (index != -1) {
+            currentSubjects[index] = subject
+            _state.value = _state.value.copy(subjects = currentSubjects)
         }
-        _state.value = _state.value.copy(
-            subjects = updatedSubjects,
-            showAddDialog = false,
-            editingSubject = null
-        )
+        hideDialog()
     }
 
     fun deleteSubject(subjectId: String) {
-        val updatedSubjects = _state.value.subjects.filter { it.id != subjectId }
-        _state.value = _state.value.copy(subjects = updatedSubjects)
+        val currentSubjects = _state.value.subjects.toMutableList()
+        currentSubjects.removeAll { it.id == subjectId }
+        _state.value = _state.value.copy(subjects = currentSubjects)
     }
 
-    // Datos de ejemplo
     private fun getDummySubjects(userId: String): List<Subject> {
         return listOf(
             Subject(
-                id = "1",
-                name = "Programación Móvil",
-                professor = "Dr. García",
-                schedule = "Lun, Mié 08:00-10:00",
+                id = UUID.randomUUID().toString(),
+                userId = userId,
+                name = "Matemáticas",
+                color = "#FF6B6B",
+                professorName = "Dr. García",
+                classroom = "Aula 101",
+                schedule = "Lun-Mier 8:00-10:00"
+            ),
+            Subject(
+                id = UUID.randomUUID().toString(),
+                userId = userId,
+                name = "Programación",
+                color = "#4ECDC4",
+                professorName = "Ing. López",
                 classroom = "Lab 3",
-                color = 0xFF8B7FFF,
-                userId = userId
+                schedule = "Mar-Jue 10:00-12:00"
             ),
             Subject(
-                id = "2",
-                name = "Bases de Datos",
-                professor = "Ing. Martínez",
-                schedule = "Mar, Jue 10:00-12:00",
-                classroom = "Aula 201",
-                color = 0xFF4A90E2,
-                userId = userId
-            ),
-            Subject(
-                id = "3",
-                name = "Inteligencia Artificial",
-                professor = "Dra. López",
-                schedule = "Vie 14:00-17:00",
-                classroom = "Lab 5",
-                color = 0xFF4CAF50,
-                userId = userId
+                id = UUID.randomUUID().toString(),
+                userId = userId,
+                name = "Física",
+                color = "#FFE66D",
+                professorName = "Dr. Martínez",
+                classroom = "Aula 205",
+                schedule = "Lun-Vier 14:00-16:00"
             )
         )
     }

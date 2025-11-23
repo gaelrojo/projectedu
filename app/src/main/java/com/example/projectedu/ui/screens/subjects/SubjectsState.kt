@@ -4,8 +4,7 @@ import com.example.projectedu.data.model.Subject
 
 data class SubjectsState(
     val subjects: List<Subject> = emptyList(),
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null,
+    val isLoading: Boolean = true,
     val showAddDialog: Boolean = false,
     val editingSubject: Subject? = null
 )

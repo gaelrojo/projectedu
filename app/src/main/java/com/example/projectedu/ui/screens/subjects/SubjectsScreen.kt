@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.projectedu.data.model.Subject
+import com.example.projectedu.data.model.SubjectColor
 import com.example.projectedu.ui.components.common.TopBar
 import com.example.projectedu.ui.theme.*
 import kotlinx.coroutines.launch
@@ -187,7 +188,7 @@ private fun SubjectCard(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(subject.colorValue),
+                        .background(SubjectColor.fromHex(subject.color)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -208,7 +209,7 @@ private fun SubjectCard(
                         color = TextPrimary
                     )
 
-                    if (subject.professor.isNotEmpty()) {
+                    if (subject.professorName.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -219,7 +220,7 @@ private fun SubjectCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = subject.professor,
+                                text = subject.professorName,
                                 fontSize = 14.sp,
                                 color = TextSecondary
                             )

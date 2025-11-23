@@ -15,7 +15,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             ProjecteduTheme {
                 val navController = rememberNavController()
-                NavGraph(navController = navController)
+
+                // ✅ CORRECCIÓN: Agregar onMenuClick
+                NavGraph(
+                    navController = navController,
+                      // Por ahora vacío, o puedes agregar lógica
+                )
             }
         }
     }

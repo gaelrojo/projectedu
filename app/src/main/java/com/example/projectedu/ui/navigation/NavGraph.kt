@@ -1,6 +1,7 @@
 package com.example.projectedu.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,9 +12,11 @@ import com.example.projectedu.ui.screens.auth.RecoveryScreen
 import com.example.projectedu.ui.screens.home.HomeScreen
 import com.example.projectedu.ui.screens.profile.ProfileScreen
 import com.example.projectedu.ui.screens.tasks.TasksScreen
+import com.example.projectedu.ui.screens.tasks.TasksViewModel
 import com.example.projectedu.ui.screens.notifications.NotificationsScreen
 import com.example.projectedu.ui.screens.calendar.CalendarScreen
-import com.example.projectedu.ui.screens.subjects.SubjectsScreen // ← NUEVO IMPORT
+import com.example.projectedu.ui.screens.subjects.SubjectsScreen
+import com.example.projectedu.ui.screens.subjects.SubjectsViewModel
 
 @Composable
 fun NavGraph(
@@ -96,9 +99,14 @@ fun NavGraph(
             HomeScreen(navController = navController)
         }
 
-        // Tasks Screen
+        // Tasks Screen - CORREGIDO CON navController
         composable(route = Screen.Tasks.route) {
-            TasksScreen(navController = navController)
+            val viewModel: TasksViewModel = viewModel()
+            TasksScreen(
+                navController = navController,
+                viewModel = viewModel,
+                onMenuClick = { }
+            )
         }
 
         // Calendar Screen
@@ -106,9 +114,14 @@ fun NavGraph(
             CalendarScreen(navController = navController)
         }
 
-        // Subjects Screen - ← NUEVO
+        // Subjects Screen - CORREGIDO CON navController
         composable(route = Screen.Subjects.route) {
-            SubjectsScreen(navController = navController)
+            val viewModel: SubjectsViewModel = viewModel()
+            SubjectsScreen(
+                navController = navController,
+                viewModel = viewModel,
+                onMenuClick = { }
+            )
         }
 
         // Notifications Screen

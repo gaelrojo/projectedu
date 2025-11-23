@@ -43,7 +43,8 @@ import java.util.*
 @Composable
 fun TasksScreen(
     navController: NavController,
-    viewModel: TasksViewModel = viewModel()
+    viewModel: TasksViewModel = viewModel(),
+    onMenuClick: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
 

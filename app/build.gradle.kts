@@ -95,4 +95,16 @@ dependencies {
 
     // Material Icons Extended (si no lo tienes)
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
+
+    dependencies {
+        // ... tus dependencias existentes ...
+
+        // Lifecycle y ViewModel (IMPORTANTES)
+        implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+        implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+
+        // Coroutines (IMPORTANTES - soluciona el error de viewModelScope)
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    }
 }
